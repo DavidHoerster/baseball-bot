@@ -96,12 +96,7 @@ namespace Microsoft.Bot.Sample.LuisBot
                 {
                     conn.Open();
                     //HR value being hard-coded here...but can be parameterized
-                    val = await conn.ExecuteScalarAsync<int>(@"select b.HR
-                                                                from master m
-    	                                                            INNER JOIN batting b ON m.playerID = b.playerID
-                                                                where b.yearID = @year
-    	                                                            AND m.nameLast = @last
-                                                                    AND m.nameFirst = @first", new { @year = year, @first = first, @last = last });
+                    val = await conn.ExecuteScalarAsync<int>(GetQueryForStat(stat), new { @year = year, @first = first, @last = last });
 
                 }
 
@@ -121,6 +116,39 @@ namespace Microsoft.Bot.Sample.LuisBot
         {
             await context.PostAsync($"You have reached {result.Intents[0].Intent}. You said: {result.Query}");
             context.Wait(MessageReceived);
+        }
+
+        private static string GetQueryForStat(string stat)
+        {
+            string q;
+            switch (stat)
+            {
+                case "hrs":
+                    q = "select b.HR from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
+                    break;
+                case "2b":
+                    q = "select b.2B from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
+                    break;
+                case "3b":
+                    q = "select b.3B from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
+                    break;
+                case "rbi":
+                    q = "select b.RBI from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
+                    break;
+                case "h":
+                    q = "select b.H from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
+                    break;
+                case "ab":
+                    q = "select b.AB from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
+                    break;
+                case "k":
+                    q = "select b.K from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
+                    break;
+                default:
+                    q = "select b.HR from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
+                    break;
+            }
+            return q;
         }
     }
 }
