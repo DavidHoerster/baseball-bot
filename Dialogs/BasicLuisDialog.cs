@@ -1,6 +1,7 @@
 using System;
 using System.Configuration;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Luis;
