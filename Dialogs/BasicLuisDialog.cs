@@ -25,6 +25,13 @@ namespace Microsoft.Bot.Sample.LuisBot
         {
         }
 
+        private class Player
+        {
+            public string Name { get; set; }
+            public string Stat { get; set; }
+            public int Val { get; set; }
+        }
+
         [LuisIntent("None")]
         public async Task NoneIntent(IDialogContext context, LuisResult result)
         {
@@ -49,6 +56,64 @@ namespace Microsoft.Bot.Sample.LuisBot
         public async Task HelpIntent(IDialogContext context, LuisResult result)
         {
             await this.ShowLuisResult(context, result);
+        }
+
+        [LuisIntent("LeaderStat")]
+        public async Task GetLeaderStatIntent(IDialogContext context, LuisResult result)
+        {
+            string stat = "HR";
+            Player player = new Player { Name = "Dave", Stat = "HR", Val = 0 };
+            int year = 2001;
+            var q = result.Query;
+
+            foreach (var ent in result.Entities)
+            {
+                switch (ent.Type)
+                {
+                    case "stat":
+                        if (ent.Resolution.Values.Count > 0)
+                        {
+                            stat = ((List<object>)ent.Resolution["values"]).First().ToString();
+                        }
+                        else
+                        {
+                            stat = ent.Entity;
+                        }
+                        break;
+                    case "year":
+                        year = Convert.ToInt32(ent.Entity);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            #region hide this
+            var connStr = ConfigurationManager.ConnectionStrings["baseballData"].ConnectionString;
+            #endregion
+
+            try
+            {
+                using (var conn = new MySqlConnection(connStr))
+                {
+                    conn.Open();
+                    //HR value being hard-coded here...but can be parameterized
+                    var query = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as value from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year";
+
+                    var results = await conn.QueryAsync<Player>(query, new { @year = year });
+                    player = results.First();
+
+                }
+
+                await context.PostAsync($"{player.Name} hit {player.Val} {player.Stat} in {year}");
+                context.Wait(MessageReceived);
+            }
+            catch (Exception exc)
+            {
+                await context.PostAsync($"Error occurred {exc.Message}");
+                context.Wait(MessageReceived);
+            }
+
         }
 
         [LuisIntent("PlayerStat")]
