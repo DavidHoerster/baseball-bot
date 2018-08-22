@@ -97,10 +97,7 @@ namespace Microsoft.Bot.Sample.LuisBot
                 using (var conn = new MySqlConnection(connStr))
                 {
                     conn.Open();
-                    //HR value being hard-coded here...but can be parameterized
-                    var query = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as value from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.HR desc";
-
-                    var results = await conn.QueryAsync<Player>(query, new { @year = year });
+                    var results = await conn.QueryAsync<Player>(GetLeaderQueryForStat(stat), new { @year = year });
                     player = results.First();
 
                 }
@@ -211,6 +208,36 @@ namespace Microsoft.Bot.Sample.LuisBot
                     break;
                 default:
                     q = "select b.HR from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
+                    break;
+            }
+            return q;
+        }
+
+        private static string GetLeaderQueryForStat(string stat)
+        {
+            string q;
+            switch (stat)
+            {
+                case "hrs":
+                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.HR desc";
+                    break;
+                case "2b":
+                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, '2B' as stat, b.2B as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.2B desc";
+                    break;
+                case "3b":
+                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, '3B' as stat, b.3B as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.3B desc";
+                    break;
+                case "rbi":
+                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'RBI' as stat, b.RBI as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.RBI desc";
+                    break;
+                case "ab":
+                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'AB' as stat, b.AB as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.AB desc";
+                    break;
+                case "k":
+                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'K' as stat, b.K as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.K desc";
+                    break;
+                default:
+                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.HR desc";
                     break;
             }
             return q;
