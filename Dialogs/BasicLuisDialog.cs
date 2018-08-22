@@ -57,7 +57,7 @@ namespace Microsoft.Bot.Sample.LuisBot
         [LuisIntent("Help")]
         public async Task HelpIntent(IDialogContext context, LuisResult result)
         {
-            await this.ShowLuisResult(context, result);
+            await this.ShowHelpInfo(context, result);
         }
 
         [LuisIntent("LeaderStat")]
@@ -194,6 +194,10 @@ namespace Microsoft.Bot.Sample.LuisBot
             
         }
 
+        private async Task ShowHelpInfo(IDialogContext context, LuisResult result){
+            await context.PostAsync("You can ask for individual or leader stats for hits, doubles, triples, homers, rbis, strikeouts, and at bats for a given year.  Just say 'How many <stat> did <player> have in <year>?' or 'Who had the most <stat> in <year>?'.");
+            context.Wait(MessageReceived);
+        }
 
         private async Task ShowLuisResult(IDialogContext context, LuisResult result) 
         {
