@@ -225,7 +225,7 @@ namespace Microsoft.Bot.Sample.LuisBot
                     q = "select b.AB from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
                     break;
                 case "k":
-                    q = "select b.K from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
+                    q = "select b.SO from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
                     break;
                 default:
                     q = "select b.HR from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year AND m.nameLast = @last AND m.nameFirst = @first";
@@ -256,6 +256,9 @@ namespace Microsoft.Bot.Sample.LuisBot
                     break;
                 case "k":
                     q = "select m.bbrefID as id, CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'K' as stat, b.SO as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.SO desc";
+                    break;
+                case "h":
+                    q = "select m.bbrefID as id, CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'Hits' as stat, b.H as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.H desc";
                     break;
                 default:
                     q = "select m.bbrefID as id, CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.HR desc";
