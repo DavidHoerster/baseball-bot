@@ -49,6 +49,74 @@ namespace Microsoft.Bot.Sample.LuisBot
             await this.ShowLuisResult(context, result);
         }
 
+        [LuisIntent("PlayerStat")]
+        public async Task GetPlayerStatIntent(IDialogContext context, LuisResult result)
+        {
+            //await this.ShowLuisResult(context, result);
+            int year = 2001;
+            string first = "barry", last = "bonds", stat = "HR";
+            int val;
+
+            var q = result.Query;
+            foreach (var ent in result.Entities)
+            {
+                switch (ent.Type)
+                {
+                    case "stat":
+                        if (ent.Resolution.Values.Count > 0)
+                        {
+                            stat = ((List<object>)ent.Resolution["values"]).First().ToString();
+                        }
+                        else
+                        {
+                            stat = ent.Entity;
+                        }
+                        break;
+                    case "year":
+                        year = Convert.ToInt32(ent.Entity);
+                        break;
+                    case "name":
+                        first = ent.Entity.Substring(0, ent.Entity.IndexOf(" "));
+                        last = ent.Entity.Substring(ent.Entity.IndexOf(" ") + 1);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+
+            #region hide this
+            var connStr = ConfigurationManager.ConnectionStrings["baseballData"].ConnectionString;
+            #endregion
+
+            using (var conn = new MySqlConnection(connStr))
+            {
+                conn.Open();
+                //HR value being hard-coded here...but can be parameterized
+                val = await conn.ExecuteScalarAsync<int>(@"select b.HR
+                                                            from master m
+	                                                            INNER JOIN batting b ON m.playerID = b.playerID
+                                                            where b.yearID = @year
+	                                                            AND m.nameLast = @last
+                                                                AND m.nameFirst = @first", new { @year = year, @first = first, @last = last });
+
+            }
+
+            await context.PostAsync($"{first} {last} hit {val} {stat} in {year}");
+            context.Wait(MessageReceived);
+
+            //var q = result.Query;
+            //StringBuilder sb = new StringBuilder();
+            //foreach (var ent in result.Entities)
+            //{
+            //    if (sb.Length != 0) { sb.Append(", "); }
+            //    sb.Append($"{ent.Type} = {ent.Entity}"); // = {q.Substring(ent.StartIndex.Value, ent.EndIndex.Value - ent.StartIndex.Value + 1)}");
+            //}
+            //await context.PostAsync(sb.ToString());
+            //context.Wait(MessageReceived);
+        }
+
+
         private async Task ShowLuisResult(IDialogContext context, LuisResult result) 
         {
             await context.PostAsync($"You have reached {result.Intents[0].Intent}. You said: {result.Query}");
