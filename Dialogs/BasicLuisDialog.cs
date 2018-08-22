@@ -11,6 +11,7 @@ using Microsoft.Bot.Builder.Luis.Models;
 using Dapper;
 
 using MySql.Data.MySqlClient;
+using Microsoft.Bot.Connector;
 
 namespace Microsoft.Bot.Sample.LuisBot
 {
@@ -27,6 +28,7 @@ namespace Microsoft.Bot.Sample.LuisBot
 
         private class Player
         {
+            public string Id { get; set; }
             public string Name { get; set; }
             public string Stat { get; set; }
             public int Val { get; set; }
@@ -62,7 +64,7 @@ namespace Microsoft.Bot.Sample.LuisBot
         public async Task GetLeaderStatIntent(IDialogContext context, LuisResult result)
         {
             string stat = "HR";
-            Player player = new Player { Name = "Dave", Stat = "HR", Val = 0 };
+            Player player = new Player { Id = "dsh", Name = "Dave", Stat = "HR", Val = 0 };
             int year = 2001;
             var q = result.Query;
 
@@ -98,12 +100,31 @@ namespace Microsoft.Bot.Sample.LuisBot
                 {
                     conn.Open();
                     var results = await conn.QueryAsync<Player>(GetLeaderQueryForStat(stat), new { @year = year });
-                    player = results.First();
+                    var topPlayers = results.Take(5);
 
+                    var players = new List<CardAction>();
+                    foreach (var p in topPlayers)
+                    {
+                        players.Add(new CardAction()
+                        {
+                            Value = $"https://www.baseball-reference.com/players/{p.Id.First().ToString()}/{p.Id}.shtml",
+                            Type = "openUrl",
+                            Title = $"{p.Name} hit {p.Val} {p.Stat} in {year}"
+                        });
+                    }
+                    var card = new HeroCard()
+                    {
+                        Title = $"Top 5 Players for {stat} in {year}",
+                        Buttons = players
+                    };
+                    var connector = new ConnectorClient(new Uri(context.Activity.ServiceUrl));
+
+                    var reply = ((Activity)context.Activity).CreateReply("");
+                    reply.Attachments = new List<Attachment>();
+                    reply.Attachments.Add(card.ToAttachment());
+
+                    await connector.Conversations.SendToConversationAsync(reply);
                 }
-
-                await context.PostAsync($"{player.Name} hit {player.Val} {player.Stat} in {year}");
-                context.Wait(MessageReceived);
             }
             catch (Exception exc)
             {
@@ -219,25 +240,25 @@ namespace Microsoft.Bot.Sample.LuisBot
             switch (stat)
             {
                 case "hrs":
-                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.HR desc";
+                    q = "select m.bbrefID as id, CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.HR desc";
                     break;
                 case "2b":
-                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, '2B' as stat, b.2B as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.2B desc";
+                    q = "select m.bbrefID as id, CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, '2B' as stat, b.2B as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.2B desc";
                     break;
                 case "3b":
-                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, '3B' as stat, b.3B as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.3B desc";
+                    q = "select m.bbrefID as id, CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, '3B' as stat, b.3B as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.3B desc";
                     break;
                 case "rbi":
-                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'RBI' as stat, b.RBI as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.RBI desc";
+                    q = "select m.bbrefID as id, CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'RBI' as stat, b.RBI as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.RBI desc";
                     break;
                 case "ab":
-                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'AB' as stat, b.AB as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.AB desc";
+                    q = "select m.bbrefID as id, CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'AB' as stat, b.AB as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.AB desc";
                     break;
                 case "k":
-                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'K' as stat, b.SO as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.SO desc";
+                    q = "select m.bbrefID as id, CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'K' as stat, b.SO as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.SO desc";
                     break;
                 default:
-                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.HR desc";
+                    q = "select m.bbrefID as id, CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.HR desc";
                     break;
             }
             return q;
