@@ -234,7 +234,7 @@ namespace Microsoft.Bot.Sample.LuisBot
                     q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'AB' as stat, b.AB as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.AB desc";
                     break;
                 case "k":
-                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'K' as stat, b.K as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.K desc";
+                    q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'K' as stat, b.SO as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.SO desc";
                     break;
                 default:
                     q = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as val from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.HR desc";
