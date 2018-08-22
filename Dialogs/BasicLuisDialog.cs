@@ -98,7 +98,7 @@ namespace Microsoft.Bot.Sample.LuisBot
                 {
                     conn.Open();
                     //HR value being hard-coded here...but can be parameterized
-                    var query = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as value from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year";
+                    var query = "select CONCAT_WS(' ',m.nameFirst, m.nameLast) as name, 'HR' as stat, b.HR as value from master m INNER JOIN batting b ON m.playerID = b.playerID where b.yearID = @year ORDER BY b.HR desc";
 
                     var results = await conn.QueryAsync<Player>(query, new { @year = year });
                     player = results.First();
